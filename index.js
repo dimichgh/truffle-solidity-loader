@@ -3,6 +3,7 @@ var TruffleContractCompiler = require('truffle-core/lib/contracts')
 var TruffleContractMigrator = require('truffle-migrate')
 var SolidityParser = require('solidity-parser')
 var Web3 = require('web3')
+var artifactor = require('truffle-artifactor')
 
 /* Internal Module Dependencies */
 var Logger = require('./lib/logger_decorator')
@@ -103,6 +104,7 @@ module.exports = function (source) {
       Logger.log('RUNNING MIGRATIONS')
 
       var migrationOpts = compilerOpts
+      migrationOpts.artifactor = artifactor
       migrationOpts.migrations_directory = buildOpts.migrations_directory
       migrationOpts.contracts_build_directory = buildPath
       migrationOpts.provider = provisionOpts.provider
@@ -116,7 +118,6 @@ module.exports = function (source) {
           Logger.error(err)
           return compilationFinished(err, null)
         }
-        console.log('here', result)
         // Finally return the contract source we were originally asked for.
         returnContractAsSource(compiledContractPath, compilationFinished)
       })
