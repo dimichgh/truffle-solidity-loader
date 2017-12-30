@@ -3,8 +3,8 @@ var TruffleContractCompiler = require('truffle-core/lib/contracts')
 var TruffleContractMigrator = require('truffle-migrate')
 var SolidityParser = require('solidity-parser')
 var Web3 = require('web3')
-var artifactor = require('truffle-artifactor')
-var resolver = require('truffle-resolver')
+var Artifactor = require('truffle-artifactor')
+var Resolver = require('truffle-resolver')
 
 /* Internal Module Dependencies */
 var Logger = require('./lib/logger_decorator')
@@ -106,14 +106,14 @@ module.exports = function (source) {
 
       var web3 = new Web3(provisionOpts.provider)
       var migrationOpts = compilerOpts
-      migrationOpts.artifactor = artifactor
-      migrationOpts.resolver = resolver
       migrationOpts.from = buildOpts.from || web3.eth.accounts[0] // similar to https://github.com/trufflesuite/truffle-core/blob/ed0f27b29f1f5eea54dc82f1eb17e63819a10614/test/migrate.js#L44
       migrationOpts.migrations_directory = buildOpts.migrations_directory
       migrationOpts.contracts_build_directory = buildPath
       migrationOpts.provider = provisionOpts.provider
       migrationOpts.logger = Logger
       migrationOpts.reset = true // Force the migrations to re-run
+      migrationOpts.artifactor = new Artifactor(migrationOpts)
+      migrationOpts.resolver = new Resolver(migrationOpts)
 
       // Once all of the contracts have been compiled, we know we can immediately
       // try to run the migrations safely.
