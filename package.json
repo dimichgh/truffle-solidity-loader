@@ -17,6 +17,7 @@
     "solidity-parser": "^0.1.0",
     "temp": "^0.8.3",
     "truffle-core": "^4.0.4",
+    "truffle-migrate": "^2.0.1",
     "web3": "0.20.3"
   }
 }
