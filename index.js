@@ -4,6 +4,7 @@ var TruffleContractMigrator = require('truffle-migrate')
 var SolidityParser = require('solidity-parser')
 var Web3 = require('web3')
 var artifactor = require('truffle-artifactor')
+var resolver = require('truffle-resolver')
 
 /* Internal Module Dependencies */
 var Logger = require('./lib/logger_decorator')
@@ -105,6 +106,7 @@ module.exports = function (source) {
 
       var migrationOpts = compilerOpts
       migrationOpts.artifactor = artifactor
+      migrationOpts.resolver = resolver
       migrationOpts.migrations_directory = buildOpts.migrations_directory
       migrationOpts.contracts_build_directory = buildPath
       migrationOpts.provider = provisionOpts.provider
