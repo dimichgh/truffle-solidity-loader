@@ -107,6 +107,7 @@ module.exports = function (source) {
       var migrationOpts = compilerOpts
       migrationOpts.artifactor = artifactor
       migrationOpts.resolver = resolver
+      migrationOpts.from = buildOpts.from || null
       migrationOpts.migrations_directory = buildOpts.migrations_directory
       migrationOpts.contracts_build_directory = buildPath
       migrationOpts.provider = provisionOpts.provider
