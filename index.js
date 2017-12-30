@@ -112,8 +112,8 @@ module.exports = function (source) {
       migrationOpts.provider = provisionOpts.provider
       migrationOpts.logger = Logger
       migrationOpts.reset = true // Force the migrations to re-run
-      migrationOpts.artifactor = new Artifactor(migrationOpts)
       migrationOpts.resolver = new Resolver(migrationOpts)
+      migrationOpts.artifactor = new Artifactor(migrationOpts.contracts_build_directory)
 
       // Once all of the contracts have been compiled, we know we can immediately
       // try to run the migrations safely.
