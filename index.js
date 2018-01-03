@@ -5,6 +5,7 @@ var SolidityParser = require('solidity-parser')
 var Web3 = require('web3')
 var Artifactor = require('truffle-artifactor')
 var Resolver = require('truffle-resolver')
+var TruffleContract = require('truffle-contract')
 
 /* Internal Module Dependencies */
 var Logger = require('./lib/logger_decorator')
@@ -33,7 +34,8 @@ function returnContractAsSource (filePath, compilationFinished) {
       return compilationFinished(err, null)
     }
 
-    compilationFinished(err, solJsFile)
+    var contractCompiledFromArtifact = TruffleContract(require(filePath)) // compile the JSON artifact to a JS contract
+    compilationFinished(err, contractCompiledFromArtifact)
   })
 }
 
@@ -53,7 +55,7 @@ module.exports = function (source) {
   var contractFilePath = this.resourcePath
   var contractFileName = path.basename(contractFilePath)
   var contractName = contractFileName.charAt(0).toUpperCase() + contractFileName.slice(1, contractFileName.length - 4)
-  var compiledContractPath = path.resolve(buildPath, contractFileName + '.js')
+  var compiledContractPath = path.resolve(buildPath, contractName + '.json') // compiled artifact JSON
 
   var imports = SolidityParser.parseFile(contractFilePath, 'imports')
 
