@@ -40,8 +40,7 @@ function returnContractAsSource (filePath, compilationFinished, contractName) {
         , contractName = '${contractName}'
 
       if(!contracts[contractName]){
-        var artifacts = ${solJsFile}
-        var artifact = artifacts['${contractName}']
+        var artifact = ${solJsFile}
         contracts[contractName] = truffleContract(artifact)
       }
       
