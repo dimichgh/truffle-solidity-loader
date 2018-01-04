@@ -27,15 +27,26 @@ function compiledContractExists (filePath) {
 }
 
 // Read the contract source file and pass it to the `compilationFinished` callback
-function returnContractAsSource (filePath, compilationFinished) {
+function returnContractAsSource (filePath, compilationFinished, contractName) {
   fs.readFile(filePath, 'utf8', function (err, solJsFile) {
     if (err) {
       Logger.error(err)
       return compilationFinished(err, null)
     }
 
-    var contractCompiledFromArtifact = TruffleContract(require(filePath)) // compile the JSON artifact to a JS contract
-    compilationFinished(err, contractCompiledFromArtifact)
+    compilationFinished(err, `
+      var truffleContract = require('truffle-contract')
+        , contracts = require('truffle-solidity-loader/contracts-cache')
+        , contractName = '${contractName}'
+
+      if(!contracts[contractName]){
+        var artifacts = ${solJsFile}
+        var artifact = artifacts['${contractName}']
+        contracts[contractName] = truffleContract(artifact)
+      }
+      
+      module.exports = contracts[contractName]
+    `)
   })
 }
 
@@ -75,7 +86,7 @@ module.exports = function (source) {
   function waitForContractCompilation () {
     setTimeout(function () {
       if (compiledContractExists(compiledContractPath)) {
-        returnContractAsSource(compiledContractPath, compilationFinished)
+        returnContractAsSource(compiledContractPath, compilationFinished, contractName)
       } else {
         waitForContractCompilation()
       }
@@ -125,7 +136,7 @@ module.exports = function (source) {
           return compilationFinished(err, null)
         }
         // Finally return the contract source we were originally asked for.
-        returnContractAsSource(compiledContractPath, compilationFinished)
+        returnContractAsSource(compiledContractPath, compilationFinished, contractName)
       })
     })
 
@@ -133,7 +144,7 @@ module.exports = function (source) {
   }
 
   if (compiledContractExists(compiledContractPath)) {
-    returnContractAsSource(compiledContractPath, compilationFinished)
+    returnContractAsSource(compiledContractPath, compilationFinished, contractName)
   } else {
     waitForContractCompilation()
   }
