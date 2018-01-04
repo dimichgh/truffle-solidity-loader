@@ -1,11 +1,11 @@
 /* External Module Dependencies */
-var TruffleContractCompiler = require('truffle-core/lib/contracts')
-var TruffleContractMigrator = require('truffle-migrate')
-var SolidityParser = require('solidity-parser')
 var Web3 = require('web3')
-var Artifactor = require('truffle-artifactor')
-var Resolver = require('truffle-resolver')
-var TruffleContract = require('truffle-contract')
+var SolidityParser = require('solidity-parser')
+var TruffleConfig = require('truffle-config')
+var TruffleCompiler = require('truffle-core/lib/contracts')
+var TruffleMigrator = require('truffle-migrate')
+var TruffleArtifactor = require('truffle-artifactor')
+var TruffleResolver = require('truffle-resolver')
 
 /* Internal Module Dependencies */
 var Logger = require('./lib/logger_decorator')
@@ -24,17 +24,21 @@ var isCompilingContracts = false
 module.exports = function (source) {
   this.cacheable && this.cacheable()
 
+  var buildOpts = TruffleConfig.detect()
+  buildOpts.logger = Logger;
+  buildOpts = BuildOptionNormalizer.normalize(buildOpts, this.query);
+
   var scratchPath = new ScratchDir()
   scratchPath.createIfMissing()
 
-  var buildPath = scratchPath.path()
+  buildOpts.contracts_build_directory = buildOpts.contracts_build_directory || scratchPath.path()
 
   var compilationFinished = this.async()
   var contractPath = this.context
   var contractFilePath = this.resourcePath
   var contractFileName = path.basename(contractFilePath)
   var contractName = contractFileName.charAt(0).toUpperCase() + contractFileName.slice(1, contractFileName.length - 4)
-  var compiledContractPath = path.resolve(buildPath, contractName + '.json') // compiled artifact JSON
+  var compiledContractPath = path.resolve(buildOpts.contracts_build_directory, contractName + '.json') // compiled artifact JSON
 
   var imports = SolidityParser.parseFile(contractFilePath, 'imports')
 
@@ -47,10 +51,6 @@ module.exports = function (source) {
     }
   }.bind(this))
 
-  var buildOpts = {}
-  buildOpts.logger = Logger
-  buildOpts = BuildOptionNormalizer.normalize(buildOpts, this.query)
-
   function waitForContractCompilation () {
     setTimeout(function () {
       if (compiledContractExists(compiledContractPath)) {
@@ -62,20 +62,20 @@ module.exports = function (source) {
   }
 
   if (!isCompilingContracts) {
-    Logger.log(`Writing temporary contract build artifacts to ${buildPath}`)
+    Logger.log('Writing temporary contract build artifacts to ' + buildOpts.contracts_build_directory)
     isCompilingContracts = true
 
     var compilerOpts = buildOpts
     compilerOpts.contracts_directory = contractPath
-    compilerOpts.contracts_build_directory = buildPath
     compilerOpts.logger = Logger
     compilerOpts.all = false
 
-    var provisionOpts = {}
-    provisionOpts.provider = new Web3.providers.HttpProvider(buildOpts.web3_rpc_uri)
-    provisionOpts.contracts_build_directory = buildPath
+    var provisionOpts = {
+      provider: new Web3.providers.HttpProvider(buildOpts.web3_rpc_uri),
+      contracts_build_directory: buildOpts.contracts_build_directory
+    }
 
-    TruffleContractCompiler.compile(compilerOpts, function (err, contracts) {
+    TruffleCompiler.compile(compilerOpts, function (err, contracts) {
       if (err) {
         Logger.error(err)
         return compilationFinished(err, null)
@@ -88,17 +88,15 @@ module.exports = function (source) {
       var web3 = new Web3(provisionOpts.provider)
       var migrationOpts = compilerOpts
       migrationOpts.from = buildOpts.from || web3.eth.accounts[0] // similar to https://github.com/trufflesuite/truffle-core/blob/ed0f27b29f1f5eea54dc82f1eb17e63819a10614/test/migrate.js#L44
-      migrationOpts.migrations_directory = buildOpts.migrations_directory
-      migrationOpts.contracts_build_directory = buildPath
       migrationOpts.provider = provisionOpts.provider
       migrationOpts.logger = Logger
       migrationOpts.reset = true // Force the migrations to re-run
-      migrationOpts.resolver = new Resolver(migrationOpts)
-      migrationOpts.artifactor = new Artifactor(migrationOpts.contracts_build_directory)
+      migrationOpts.resolver = new TruffleResolver(migrationOpts)
+      migrationOpts.artifactor = new TruffleArtifactor(buildOpts.contracts_build_directory)
 
       // Once all of the contracts have been compiled, we know we can immediately
       // try to run the migrations safely.
-      TruffleContractMigrator.run(migrationOpts, function (err, result) {
+      TruffleMigrator.run(migrationOpts, function (err, result) {
         if (err) {
           Logger.error(err)
           return compilationFinished(err, null)
