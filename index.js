@@ -11,43 +11,12 @@ var TruffleContract = require('truffle-contract')
 var Logger = require('./lib/logger_decorator')
 var BuildOptionNormalizer = require('./lib/build_option_normalizer')
 var ScratchDir = require('./lib/scratch_dir')
+var compiledContractExists = require('./lib/contract_checker')
+var returnContractAsSource = require('./lib/contract_returner')
 
 /* Native Node Imports */
 var path = require('path')
 var fs = require('fs')
-
-// Synchronus file existence check helper
-function compiledContractExists (filePath) {
-  try {
-    fs.statSync(filePath)
-  } catch (err) {
-    if (err.code === 'ENOENT') return false
-  }
-  return true
-}
-
-// Read the contract source file and pass it to the `compilationFinished` callback
-function returnContractAsSource (filePath, compilationFinished, contractName) {
-  fs.readFile(filePath, 'utf8', function (err, solJsFile) {
-    if (err) {
-      Logger.error(err)
-      return compilationFinished(err, null)
-    }
-
-    compilationFinished(err, `
-      var truffleContract = require('truffle-contract')
-        , contracts = require('truffle-solidity-loader/contracts-cache')
-        , contractName = '${contractName}'
-
-      if(!contracts[contractName]){
-        var artifact = ${solJsFile}
-        contracts[contractName] = truffleContract(artifact)
-      }
-      
-      module.exports = contracts[contractName]
-    `)
-  })
-}
 
 // This acts as a mutex to prevent multiple compilation runs
 var isCompilingContracts = false
