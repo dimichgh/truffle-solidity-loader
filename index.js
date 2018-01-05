@@ -62,10 +62,10 @@ module.exports = function (source) {
     config.contracts_directory = contractPath
     config.all = false
 
-    var networkId = config.network
-    var network = config.networks[networkId]
+    var networkName = config.network
+    var network = config.networks[networkName];
     var providerUri = 'http://' + network.host + ':' + network.port
-    var provider = config.networks[networkId].provider = new Web3.providers.HttpProvider(providerUri)
+    var provider = config.networks[networkName].provider = new Web3.providers.HttpProvider(providerUri)
 
     TruffleCompiler.compile(config, function (err, contracts) {
       if (err) {
@@ -78,7 +78,7 @@ module.exports = function (source) {
       Logger.log('RUNNING MIGRATIONS')
 
       var web3 = new Web3(provider)
-      config.networks[networkId].from = network.from || web3.eth.accounts[0] // similar to https://github.com/trufflesuite/truffle-core/blob/ed0f27b29f1f5eea54dc82f1eb17e63819a10614/test/migrate.js#L44
+      config.networks[networkName].from = network.from || web3.eth.accounts[0] // similar to https://github.com/trufflesuite/truffle-core/blob/ed0f27b29f1f5eea54dc82f1eb17e63819a10614/test/migrate.js#L44
       config.reset = true // Force the migrations to re-run
 
       // Once all of the contracts have been compiled, we know we can immediately
