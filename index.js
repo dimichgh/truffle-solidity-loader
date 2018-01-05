@@ -1,4 +1,5 @@
 /* External Module Dependencies */
+var loaderUtils = require('loader-utils')
 var Web3 = require('web3')
 var SolidityParser = require('solidity-parser')
 var TruffleConfig = require('truffle-config')
@@ -24,7 +25,7 @@ module.exports = function (source) {
   var config = BuildOptionNormalizer.normalize({
     working_directory: process.cwd(),
     logger: Logger
-  }, this.query)
+  }, loaderUtils.getOptions(this))
 
   var compilationFinished = this.async()
   var contractPath = this.context
