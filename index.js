@@ -33,16 +33,17 @@ module.exports = function (source) {
   var contractName = contractFileName.charAt(0).toUpperCase() + contractFileName.slice(1, contractFileName.length - 4)
   var compiledContractPath = path.resolve(config.contracts_build_directory, contractName + '.json') // compiled artifact JSON
 
-  var imports = SolidityParser.parseFile(contractFilePath, 'imports')
+  var addDependency = this.addDependency
+  SolidityParser.visit(SolidityParser.parse(source), {
+    ImportDirective: function(node) {
+      var dependencyPath = path.resolve(contractPath, node.path)
+      addDependency(dependencyPath)
 
-  imports.forEach(function (solidityImport) {
-    var dependencyPath = path.resolve(contractPath, solidityImport)
-    this.addDependency(dependencyPath)
-
-    if (compiledContractExists(compiledContractPath)) {
-      fs.unlinkSync(compiledContractPath)
+      if (compiledContractExists(compiledContractPath)) {
+        fs.unlinkSync(compiledContractPath)
+      }
     }
-  }.bind(this))
+  })
 
   function waitForContractCompilation () {
     setTimeout(function () {
