@@ -2,7 +2,7 @@
 var loaderUtils = require('loader-utils')
 var Web3 = require('web3')
 var SolidityParser = require('solidity-parser-antlr')
-var TruffleCompiler = require('truffle-core/lib/contracts')
+var TruffleCompiler = require('truffle-workflow-compile')
 var TruffleMigrator = require('truffle-migrate')
 
 /* Internal Module Dependencies */
