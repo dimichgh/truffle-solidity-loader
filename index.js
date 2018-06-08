@@ -40,7 +40,7 @@ module.exports = function (source) {
       addDependency(dependencyPath)
 
       if (compiledContractExists(compiledContractPath)) {
-        fs.unlinkSync(compiledContractPath)
+        // fs.unlinkSync(compiledContractPath)
       }
     }
   })
@@ -55,7 +55,7 @@ module.exports = function (source) {
     }.bind(this), 500)
   }
 
-  if (!isCompilingContracts) {
+  if (false && !isCompilingContracts) {
     Logger.log('Writing temporary contract build artifacts to ' + config.contracts_build_directory)
     isCompilingContracts = true
 
@@ -72,26 +72,28 @@ module.exports = function (source) {
         Logger.error(err)
         return compilationFinished(err, null)
       }
-      
-      isCompilingContracts = false
-      Logger.log('COMPILATION FINISHED')
-      Logger.log('RUNNING MIGRATIONS')
 
-      var web3 = new Web3(provider)
-      config.networks[networkName].from = network.from || web3.eth.accounts[0] // similar to https://github.com/trufflesuite/truffle-core/blob/ed0f27b29f1f5eea54dc82f1eb17e63819a10614/test/migrate.js#L44
-      config.reset = true // Force the migrations to re-run
+        isCompilingContracts = false
+        Logger.log('COMPILATION FINISHED')
+        Logger.log('RUNNING MIGRATIONS')
 
-      // Once all of the contracts have been compiled, we know we can immediately
-      // try to run the migrations safely.
-      TruffleMigrator.run(config, function (err, result) {
-        if (err) {
-          Logger.error(err)
-          return compilationFinished(err, null)
-        }
+        var web3 = new Web3(provider)
+        config.networks[networkName].from = network.from || web3.eth.accounts[0] // similar to https://github.com/trufflesuite/truffle-core/blob/ed0f27b29f1f5eea54dc82f1eb17e63819a10614/test/migrate.js#L44
+        config.reset = true // Force the migrations to re-run
 
-        // Finally return the contract source we were originally asked for.
-        returnContractAsSource(compiledContractPath, compilationFinished, contractName)
-      })
+        // Once all of the contracts have been compiled, we know we can immediately
+        // try to run the migrations safely.
+        TruffleMigrator.run(config, function (err, result) {
+          if (err) {
+            Logger.error(err)
+            return compilationFinished(err, null)
+          }
+              // Finally return the contract source we were originally asked for.
+          returnContractAsSource(compiledContractPath, compilationFinished, contractName)
+
+        })
+
+
     })
 
     return
